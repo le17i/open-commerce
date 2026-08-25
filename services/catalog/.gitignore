@@ -1,8 +1,7 @@
 # compiled output
-*bin/
-*dist/
-*node_modules/
-.nx
+/dist
+/node_modules
+/build
 
 # Logs
 logs
@@ -36,19 +35,24 @@ lerna-debug.log*
 !.vscode/launch.json
 !.vscode/extensions.json
 
-.nx/cache
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
 
+# temp directory
+.temp
+.tmp
 
-# ENV Files
-*.env
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
 
-# testcontainers-provisioned DB connection string (services/catalog e2e)
-.e2e-db-url
-
-# Claude Code runtime state
-.claude/scheduled_tasks.lock
-.claude/settings.local.json
+# Diagnostic reports (https://nodejs.org/api/report.html)
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+node_modules/
+dist/

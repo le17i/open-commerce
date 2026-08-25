@@ -1,6 +1,6 @@
 # End-to-End Testing
 
-E2E tests cover real customer/staff journeys through a running frontend, using Playwright. They live per frontend app (`apps/storefront/e2e/`, `apps/admin/e2e/`), not per backend service — backend services are covered by their own API-level integration tests plus the unit tests in [TESTING_UNIT.md](TESTING_UNIT.md).
+E2E tests cover real customer/staff journeys through a running frontend, using Playwright. They live per frontend app (`apps/storefront/e2e/`, `apps/admin/e2e/`), not per backend service — backend services are covered by their own API-level integration tests (see [TESTING_INTEGRATION.md](TESTING_INTEGRATION.md)) plus the unit tests in [TESTING_UNIT.md](TESTING_UNIT.md).
 
 ## What to cover
 
@@ -31,5 +31,6 @@ test.describe("checkout", () => {
 ## See also
 
 - [TESTING_UNIT.md](TESTING_UNIT.md) — service-layer tests
+- [TESTING_INTEGRATION.md](TESTING_INTEGRATION.md) — backend API-level integration tests
 - [FRONTEND.md](FRONTEND.md) — `data-testid` placement rules
 - [CHECKLISTS.md](CHECKLISTS.md) — pre-PR gate

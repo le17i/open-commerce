@@ -34,5 +34,6 @@ Test the function body as a plain async function with its dependencies mocked, t
 
 ## See also
 
+- [TESTING_INTEGRATION.md](TESTING_INTEGRATION.md) — backend API-level integration tests (real DB via testcontainers)
 - [TESTING_E2E.md](TESTING_E2E.md) — journey-level tests across the full stack
 - [CHECKLISTS.md](CHECKLISTS.md) — the pre-PR gate this feeds into

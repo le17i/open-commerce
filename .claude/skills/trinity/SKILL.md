@@ -20,12 +20,12 @@ Check `docs/ARCHITECTURE.md`'s stack table for the service you're implementing i
 ## Process
 
 1. If given `neo`'s architecture output, follow its phased checklist in order (schema → service methods → API layer → Inngest functions → frontend hooks it flagged). If not given one, do the equivalent thinking yourself first — don't start writing code without knowing the target shape.
-2. If given `merovingian`'s Mode A test plan, write the tests for a unit of work before or alongside its implementation.
+2. If given `merovingian`'s Mode A test plan, write the tests for a unit of work before or alongside its implementation — unit tests per `docs/TESTING_UNIT.md`, and route-level integration tests per `docs/TESTING_INTEGRATION.md` (Jest+Supertest, DB via `@testcontainers/postgresql` — never hand-wire a test against a developer's local `docker-compose` Postgres).
 3. Schema first: add/change the Prisma model or Zod schema. Run `prisma generate`/`prisma migrate dev` for Prisma services.
 4. DTOs/schemas: compose from existing base schemas (`OmitType`/`PickType` for Nest, `.pick()/.extend()` for Zod) — never redeclare a field set from scratch.
 5. Service methods: object-param signature for new methods (see `docs/DATA_LAYER.md` — don't touch existing positional-arg methods just to convert them). Return `null` for not-found, throw typed `AppError` subclasses for business-rule violations.
 6. API layer: thin controller/route/Hono handler — one service call, response shaping only (`docs/API_LAYER.md`).
-7. Run `pnpm lint`, `pnpm build`, `pnpm test` for the service before considering the work done — don't hand off code that doesn't pass its own basic checks.
+7. Run `pnpm lint`, `pnpm build`, `pnpm test`, and `pnpm test:e2e` (requires a reachable Docker daemon — testcontainers provisions its own Postgres) for the service before considering the work done — don't hand off code that doesn't pass its own basic checks.
 
 ## Boundaries
 
