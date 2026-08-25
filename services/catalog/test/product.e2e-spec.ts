@@ -118,22 +118,19 @@ describe("ProductsController (e2e)", () => {
         .send(body)
         .expect(201);
 
-      const res = await request(app.getHttpServer())
+      await request(app.getHttpServer())
         .post("/products")
-        .send({ ...body, barcode: `${body.barcode}-2` });
-
-      expect(res.status).toBeGreaterThanOrEqual(400);
+        .send({ ...body, barcode: `${body.barcode}-2` })
+        .expect(409);
     });
 
-    // ProductsService.create passes brandId/categoryId/colorId/kindId
-    // straight to Prisma with no existence check first — an unresolvable FK
-    // currently throws an unhandled Prisma error rather than a clean 400.
-    it("surfaces an error for a nonexistent brandId (FK violation, not a clean 4xx)", async () => {
+    it("responds 400 for a nonexistent brandId", async () => {
       const res = await request(app.getHttpServer())
         .post("/products")
-        .send({ ...baseProductBody(), brandId: 999999999 });
+        .send({ ...baseProductBody(), brandId: 999999999 })
+        .expect(400);
 
-      expect(res.status).toBeGreaterThanOrEqual(400);
+      expect(res.body.message).toEqual(expect.stringContaining("999999999"));
     });
   });
 
@@ -203,21 +200,14 @@ describe("ProductsController (e2e)", () => {
       expect(res.body.title).toBe(body.title);
     });
 
-    // ProductsService.findOne returns `null` for a nonexistent id/slug, and
-    // the controller passes it straight through with no 404 handling.
-    it("responds 200 with an empty body for a nonexistent id", async () => {
-      const res = await request(app.getHttpServer())
-        .get("/products/999999999")
-        .expect(200);
-      expect(res.body.id).toBeUndefined();
+    it("responds 404 for a nonexistent id", async () => {
+      await request(app.getHttpServer()).get("/products/999999999").expect(404);
     });
 
-    it("responds 200 with an empty body for a nonexistent slug", async () => {
-      const res = await request(app.getHttpServer())
+    it("responds 404 for a nonexistent slug", async () => {
+      await request(app.getHttpServer())
         .get(`/products/slug/${E2E_PREFIX}does-not-exist`)
-        .expect(200);
-
-      expect(res.body.id).toBeUndefined();
+        .expect(404);
     });
   });
 

@@ -1,6 +1,14 @@
 import { Injectable } from "@nestjs/common";
 import { ProductStatusEnum, Prisma, Product } from "../database/prisma/client";
 import { DatabaseService } from "../database.service";
+import {
+  BrandNotFoundError,
+  CategoryNotFoundError,
+  ColorNotFoundError,
+  KindNotFoundError,
+  ParentProductNotFoundError,
+  ProductConflictError,
+} from "./product.errors";
 
 // Re-exporting types from the generated Prisma client for external use.
 // This avoid hard coupling with the generated Prisma client and allows for easier refactoring in the future.
@@ -55,43 +63,82 @@ export class ProductsService {
     width = 0,
     status: ProductStatusEnum = ProductStatusEnum.DRAFT,
   ) {
-    const product = await this.db.product.create({
-      data: {
-        barcode,
-        brandId,
-        categoryId,
-        colorId,
-        kindId,
-        content,
-        description,
-        height,
-        length,
-        model,
-        parentId,
-        slug,
-        status,
-        stock,
-        sku,
-        title,
-        weight,
-        width,
-        offers: {
-          create: { price, isActive: true },
-        },
-      },
-      include: {
-        brand: true,
-        category: true,
-        color: true,
-        kind: true,
-        images: true,
-        offers: true,
-        tags: true,
-        variants: true,
-      },
-    });
+    const [brand, category, color, kind] = await Promise.all([
+      this.db.brand.findUnique({ where: { id: brandId } }),
+      this.db.category.findUnique({ where: { id: categoryId } }),
+      this.db.color.findUnique({ where: { id: colorId } }),
+      this.db.kind.findUnique({ where: { id: kindId } }),
+    ]);
 
-    return product;
+    if (!brand) {
+      throw new BrandNotFoundError(brandId);
+    }
+    if (!category) {
+      throw new CategoryNotFoundError(categoryId);
+    }
+    if (!color) {
+      throw new ColorNotFoundError(colorId);
+    }
+    if (!kind) {
+      throw new KindNotFoundError(kindId);
+    }
+
+    if (parentId) {
+      const parentProduct = await this.db.product.findUnique({
+        where: { id: parentId },
+      });
+      if (!parentProduct) {
+        throw new ParentProductNotFoundError(parentId);
+      }
+    }
+
+    try {
+      const product = await this.db.product.create({
+        data: {
+          barcode,
+          brandId,
+          categoryId,
+          colorId,
+          kindId,
+          content,
+          description,
+          height,
+          length,
+          model,
+          parentId,
+          slug,
+          status,
+          stock,
+          sku,
+          title,
+          weight,
+          width,
+          offers: {
+            create: { price, isActive: true },
+          },
+        },
+        include: {
+          brand: true,
+          category: true,
+          color: true,
+          kind: true,
+          images: true,
+          offers: true,
+          tags: true,
+          variants: true,
+        },
+      });
+
+      return product;
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        throw new ProductConflictError(slug);
+      }
+      throw error;
+    }
   }
 
   /**
@@ -178,6 +225,14 @@ export class ProductsService {
       "id" | "createAt" | "categoryId" | "parentId" | "barcode" | "slug" | "sku"
     >,
   ) {
+    const existingProduct = await this.db.product.findUnique({
+      where: predicated,
+    });
+
+    if (!existingProduct) {
+      return null;
+    }
+
     return this.db.product.update({
       where: predicated,
       data: model,

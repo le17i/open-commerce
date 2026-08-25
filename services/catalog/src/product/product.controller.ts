@@ -1,7 +1,10 @@
 import {
+  BadRequestException,
   Body,
+  ConflictException,
   Controller,
   Get,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -9,6 +12,10 @@ import {
 } from "@nestjs/common";
 import { ProductsService, ProductStatusEnum } from "./product.service";
 import { CreateProductDto, EditProductDto } from "./product.dto";
+import {
+  ProductConflictError,
+  RelatedEntityNotFoundError,
+} from "./product.errors";
 import {
   ApiOperation,
   ApiParam,
@@ -55,6 +62,11 @@ export class ProductsController {
   @ApiResponse({ status: 404, description: "Product not found." })
   async GetProductById(@Param("id") id: number) {
     const product = await this.productsService.findOne({ id });
+
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found.`);
+    }
+
     return product;
   }
 
@@ -67,6 +79,11 @@ export class ProductsController {
     const product = await this.productsService.findOne({
       slug: slug,
     });
+
+    if (!product) {
+      throw new NotFoundException(`Product with slug ${slug} not found.`);
+    }
+
     return product;
   }
 
@@ -75,37 +92,50 @@ export class ProductsController {
   @ApiResponse({ status: 201, description: "Product created successfully." })
   @ApiResponse({ status: 400, description: "Invalid product data." })
   async CreateProduct(@Body() body: CreateProductDto) {
-    const product = await this.productsService.create(
-      body.title,
-      body.slug,
-      body.sku,
-      body.barcode,
-      body.model,
-      body.brandId,
-      body.categoryId,
-      body.colorId,
-      body.kindId,
-      body.content,
-      body.description,
-      body.height,
-      body.length,
-      body.parentId,
-      body.price,
-      body.stock,
-      body.weight,
-      body.width,
-    );
-
-    return product;
+    try {
+      return await this.productsService.create(
+        body.title,
+        body.slug,
+        body.sku,
+        body.barcode,
+        body.model,
+        body.brandId,
+        body.categoryId,
+        body.colorId,
+        body.kindId,
+        body.content,
+        body.description,
+        body.height,
+        body.length,
+        body.parentId,
+        body.price,
+        body.stock,
+        body.weight,
+        body.width,
+      );
+    } catch (error) {
+      if (error instanceof RelatedEntityNotFoundError) {
+        throw new BadRequestException(error.message);
+      }
+      if (error instanceof ProductConflictError) {
+        throw new ConflictException(error.message);
+      }
+      throw error;
+    }
   }
 
   @Patch(":id")
   @ApiOperation({ summary: "Update a product" })
   @ApiParam({ name: "id", type: Number, example: 1 })
   @ApiResponse({ status: 200, description: "Product updated successfully." })
+  @ApiResponse({ status: 400, description: "Invalid product data." })
   @ApiResponse({ status: 404, description: "Product not found." })
   async EditProduct(@Param("id") id: number, @Body() body: EditProductDto) {
     const product = await this.productsService.update({ id }, body);
+
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found.`);
+    }
 
     return product;
   }
