@@ -1,6 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { Prisma } from "../database/prisma/client";
 import { DatabaseService } from "../database.service";
+import {
+  ProductNotFoundError,
+  ProductOfferNotFoundError,
+} from "./product.errors";
 
 @Injectable()
 export class ProductOffersService {
@@ -23,10 +27,26 @@ export class ProductOffersService {
     });
 
     if (!product) {
-      throw new Error(`Product with id ${productId} not found`);
+      throw new ProductNotFoundError(productId);
     }
 
     return product;
+  }
+
+  private async findOfferById(
+    offerId: number,
+    productId: number,
+    $tx: Prisma.TransactionClient,
+  ) {
+    const offer = await $tx.offer.findUnique({
+      where: { id: offerId, productId },
+    });
+
+    if (!offer) {
+      throw new ProductOfferNotFoundError(offerId);
+    }
+
+    return offer;
   }
 
   /**
@@ -45,6 +65,7 @@ export class ProductOffersService {
     isActive = true,
   ) {
     const product = await this.db.$transaction(async ($tx) => {
+      // Find the product to ensure it exists before creating the offer
       await this.findProductById(productId, $tx);
 
       await $tx.offer.updateMany({
@@ -94,15 +115,11 @@ export class ProductOffersService {
     data: Omit<Prisma.OfferUpdateInput, "productId">,
   ) {
     const product = await this.db.$transaction(async ($tx) => {
+      // Find the product to ensure it exists before updating the offer
       await this.findProductById(productId, $tx);
 
-      const existingOffer = await $tx.offer.findUnique({
-        where: { id: offerId },
-      });
-
-      if (!existingOffer) {
-        throw new Error(`Offer with id ${offerId} not found`);
-      }
+      // Find the offer to ensure it exists before updating
+      await this.findOfferById(offerId, productId, $tx);
 
       await $tx.offer.updateMany({
         where: { productId },
@@ -141,7 +158,11 @@ export class ProductOffersService {
    */
   async deleteOffer(productId: number, offerId: number) {
     const product = await this.db.$transaction(async ($tx) => {
+      // Find the product and offer to ensure they exist before deletion
       await this.findProductById(productId, $tx);
+
+      // Find the offer to ensure it exists before deletion
+      await this.findOfferById(offerId, productId, $tx);
 
       await $tx.offer.delete({
         where: { id: offerId },

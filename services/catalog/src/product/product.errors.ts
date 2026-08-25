@@ -43,3 +43,18 @@ export class ProductConflictError extends Error {
     super(`A product with slug '${slug}' already exists.`);
   }
 }
+
+export class ProductNotFoundError extends Error {
+  constructor(productId: number);
+  constructor(slug: string);
+  constructor(identifier: number | string) {
+    const messageType = typeof identifier === "number" ? "ID" : "slug";
+    super(`Product with ${messageType} ${identifier} not found.`);
+  }
+}
+
+export class ProductOfferNotFoundError extends Error {
+  constructor(offerId: number) {
+    super(`Product offer with ID ${offerId} not found.`);
+  }
+}

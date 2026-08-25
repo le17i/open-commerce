@@ -41,7 +41,7 @@ export class ProductOffersController {
       );
       return product;
     } catch (error) {
-      return new BadRequestException(error);
+      throw new BadRequestException(error);
     }
   }
 
@@ -62,7 +62,7 @@ export class ProductOffersController {
       );
       return product;
     } catch (error) {
-      return new BadRequestException(error);
+      throw new BadRequestException(error);
     }
   }
 }
