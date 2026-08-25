@@ -50,7 +50,7 @@ describe("ProductOffersService", () => {
       tx.product.findUnique.mockResolvedValue(null);
 
       await expect(service.createOffer(1)).rejects.toThrow(
-        "Product with id 1 not found",
+        "Product with ID 1 not found.",
       );
       expect(tx.offer.create).not.toHaveBeenCalled();
     });
@@ -97,7 +97,7 @@ describe("ProductOffersService", () => {
       tx.product.findUnique.mockResolvedValue(null);
 
       await expect(service.editOffer(1, 5, {})).rejects.toThrow(
-        "Product with id 1 not found",
+        "Product with ID 1 not found.",
       );
       expect(tx.offer.update).not.toHaveBeenCalled();
     });
@@ -107,7 +107,7 @@ describe("ProductOffersService", () => {
       tx.offer.findUnique.mockResolvedValue(null);
 
       await expect(service.editOffer(1, 5, {})).rejects.toThrow(
-        "Offer with id 5 not found",
+        "Product offer with ID 5 not found.",
       );
       expect(tx.offer.update).not.toHaveBeenCalled();
     });
@@ -137,7 +137,17 @@ describe("ProductOffersService", () => {
       tx.product.findUnique.mockResolvedValue(null);
 
       await expect(service.deleteOffer(1, 5)).rejects.toThrow(
-        "Product with id 1 not found",
+        "Product with ID 1 not found.",
+      );
+      expect(tx.offer.delete).not.toHaveBeenCalled();
+    });
+
+    it("throws when the offer does not exist", async () => {
+      tx.product.findUnique.mockResolvedValue({ id: 1 });
+      tx.offer.findUnique.mockResolvedValue(null);
+
+      await expect(service.deleteOffer(1, 5)).rejects.toThrow(
+        "Product offer with ID 5 not found.",
       );
       expect(tx.offer.delete).not.toHaveBeenCalled();
     });
@@ -146,6 +156,7 @@ describe("ProductOffersService", () => {
       tx.product.findUnique
         .mockResolvedValueOnce({ id: 1 })
         .mockResolvedValueOnce({ id: 1, offers: [] });
+      tx.offer.findUnique.mockResolvedValue({ id: 5 });
 
       const result = await service.deleteOffer(1, 5);
 

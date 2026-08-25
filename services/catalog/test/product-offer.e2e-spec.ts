@@ -85,20 +85,18 @@ describe("ProductOffersController (e2e)", () => {
         .expect(400);
     });
 
-    // ProductOffersService.createOffer throws a plain Error when the
-    // product doesn't exist. ProductOffersController catches it but
-    // `return`s the BadRequestException instead of throwing it, so Nest
-    // serializes it as a normal response body instead of an HTTP error —
-    // this still comes back with the route's default success status (201
-    // for POST), not 400. Documenting actual behavior; the controller
-    // should `throw` here instead of `return`.
-    it("responds 201 with a serialized BadRequestException body for a nonexistent productId", async () => {
+    // The controller now throws instead of returning the
+    // BadRequestException, so this correctly responds 400. The body is
+    // still `{}` though: the controller passes the raw ProductNotFoundError
+    // instance into `new BadRequestException(error)`, and Error's `message`
+    // property isn't enumerable, so it doesn't survive JSON serialization.
+    it("responds 400 for a nonexistent productId", async () => {
       const res = await request(app.getHttpServer())
         .post("/products/999999999/offers")
         .send({ price: 1999, promotionalPrice: 1499, isActive: true })
-        .expect(201);
+        .expect(400);
 
-      expect(res.body).toMatchObject({ status: 400 });
+      expect(res.body).toEqual({});
     });
   });
 
@@ -121,11 +119,9 @@ describe("ProductOffersController (e2e)", () => {
         .put(`/products/${productId}/offers/id`)
         .send({ price: 1, promotionalPrice: 1, isActive: true });
 
-      // Same return-instead-of-throw issue as CreateOffer above: the
-      // handler catches its internal error and returns a
-      // BadRequestException object with the route's default 200 status.
-      expect(res.status).toBe(200);
-      expect(res.body).toMatchObject({ status: 400 });
+      // The controller now throws instead of returning, so this correctly
+      // responds 400 (the route-param bug above is unchanged).
+      expect(res.status).toBe(400);
     });
   });
 });
