@@ -76,8 +76,8 @@ export class ProductsController {
   @ApiResponse({ status: 400, description: "Invalid product data." })
   async CreateProduct(@Body() body: CreateProductDto) {
     const product = await this.productsService.create(
-      body.slug,
       body.title,
+      body.slug,
       body.sku,
       body.barcode,
       body.model,
