@@ -32,4 +32,15 @@ export default tseslint.config(
       "prettier/prettier": ["error", { endOfLine: "auto" }],
     },
   },
+  {
+    // Supertest's `res.body` is untyped (`any`) by design — integration
+    // specs read arbitrary JSON response bodies, so the usual unsafe-*
+    // rules would just force casts everywhere without catching real bugs.
+    files: ['test/**/*.e2e-spec.ts'],
+    rules: {
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+    },
+  },
 );

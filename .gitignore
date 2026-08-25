@@ -46,6 +46,9 @@ lerna-debug.log*
 # ENV Files
 *.env
 
+# testcontainers-provisioned DB connection string (services/catalog e2e)
+.e2e-db-url
+
 # Claude Code runtime state
 .claude/scheduled_tasks.lock
 .claude/settings.local.json
