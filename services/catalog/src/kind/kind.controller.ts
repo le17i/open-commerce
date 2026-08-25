@@ -45,7 +45,7 @@ export class KindController {
     return kind;
   }
 
-  @Post("createKind")
+  @Post()
   @ApiOperation({ summary: "Create a kind" })
   @ApiBody({ type: CreateKindDto })
   @ApiResponse({
